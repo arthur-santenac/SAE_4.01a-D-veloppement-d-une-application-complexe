@@ -1,0 +1,20 @@
+import { API_URL } from './config.js';
+import { recupererAeroports } from './views/aeroport.js';
+import { recupererCompagnies } from './views/compagnie.js';
+import { recupererTerminaux } from './views/terminal.js';
+import { recupererVilles } from './views/ville.js';
+import { recupererVols } from './views/vol.js';
+
+
+let ongletActuelle = null;
+let objeetActuelleId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('aeroport').onclick = recupererAeroports;
+    document.getElementById('compagnie').onclick = recupererCompagnies;
+    document.getElementById('terminal').onclick = recupererTerminaux;
+    document.getElementById('ville').onclick = recupererVilles;
+    document.getElementById('vol').onclick = recupererVols;
+});
+
+API_URL

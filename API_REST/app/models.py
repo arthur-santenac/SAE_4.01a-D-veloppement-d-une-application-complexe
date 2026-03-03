@@ -2,13 +2,13 @@ from .extensions import db
 
 class Compagnie(db.Model):
     __tablename__ = "compagnie"
-    idCompagnie = db.Column(db.String(10), primary_key=True)
+    idCompagnie = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nomCompagnie = db.Column(db.String(50), nullable=False)
     vols = db.relationship("Vol", back_populates="compagnie")
 
 class Pays(db.Model):
     __tablename__ = "pays"
-    codePays = db.Column(db.String(2), primary_key=True)
+    codePays = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nomPays = db.Column(db.String(50), nullable=False)
     villes = db.relationship("Ville", back_populates="pays")
 
@@ -16,7 +16,7 @@ class Ville(db.Model):
     __tablename__ = "ville"
     idVille = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nomVille = db.Column(db.String(50), nullable=False)
-    codePays = db.Column(db.String(2), db.ForeignKey("pays.codePays"), nullable=False)
+    codePays = db.Column(db.Integer, db.ForeignKey("pays.codePays"), nullable=False)
     pays = db.relationship("Pays", back_populates="villes")
     aeroports = db.relationship("Aeroport", back_populates="ville")
 
@@ -36,7 +36,7 @@ class Terminal(db.Model):
 
 class Vol(db.Model):
     __tablename__ = "vol"
-    idCompagnie = db.Column(db.String(10), db.ForeignKey("compagnie.idCompagnie"), primary_key=True)
+    idCompagnie = db.Column(db.Integer, db.ForeignKey("compagnie.idCompagnie"), primary_key=True)
     numVol = db.Column(db.String(10), primary_key=True)
     dateHeureDep = db.Column(db.DateTime, primary_key=True)
     dateHeureArr = db.Column(db.DateTime, nullable=False)
@@ -68,8 +68,8 @@ def get_all_compagnies():
 def get_compagnie(idCompagnie):
     return Compagnie.query.get(idCompagnie)
 
-def create_compagnie(idCompagnie, nomCompagnie):
-    compagnie = Compagnie(idCompagnie=idCompagnie, nomCompagnie=nomCompagnie)
+def create_compagnie(nomCompagnie):
+    compagnie = Compagnie(nomCompagnie=nomCompagnie)
     db.session.add(compagnie)
     db.session.commit()
     return compagnie
@@ -96,8 +96,8 @@ def get_all_pays():
 def get_pays(codePays):
     return Pays.query.get(codePays)
 
-def create_pays(codePays, nomPays):
-    pays = Pays(codePays=codePays, nomPays=nomPays)
+def create_pays(nomPays):
+    pays = Pays(nomPays=nomPays)
     db.session.add(pays)
     db.session.commit()
     return pays
@@ -220,8 +220,7 @@ def get_vols_by_aeroport_dep(idAeroportDep):
 def get_vols_by_aeroport_arr(idAeroportArr):
     return Vol.query.filter_by(idAeroportArr=idAeroportArr).all()
 
-def create_vol(idCompagnie, numVol, dateHeureDep, dateHeureArr,
-               idAeroportDep, numTerminalDep, idAeroportArr, numTerminalArr):
+def create_vol(idCompagnie, numVol, dateHeureDep, dateHeureArr,idAeroportDep, numTerminalDep, idAeroportArr, numTerminalArr):
     vol = Vol(
         idCompagnie=idCompagnie,
         numVol=numVol,
@@ -236,8 +235,7 @@ def create_vol(idCompagnie, numVol, dateHeureDep, dateHeureArr,
     db.session.commit()
     return vol
 
-def modify_vol(idCompagnie, numVol, dateHeureDep, dateHeureArr,
-               idAeroportDep, numTerminalDep, idAeroportArr, numTerminalArr):
+def modify_vol(idCompagnie, numVol, dateHeureDep, dateHeureArr,idAeroportDep, numTerminalDep, idAeroportArr, numTerminalArr):
     vol = Vol.query.get((idCompagnie, numVol, dateHeureDep))
     if vol is None:
         return None

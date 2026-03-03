@@ -24,10 +24,10 @@ class CompagnieCollection(Resource):
     @ns.expect(compagnie_input_model)
     @ns.marshal_with(compagnie_model)
     def post(self):
-        compagnie = create_compagnie(idCompagnie=ns.payload["idCompagnie"],nomCompagnie=ns.payload["nomCompagnie"])
+        compagnie = create_compagnie(nomCompagnie=ns.payload["nomCompagnie"])
         return compagnie, 201
 
-@ns.route("/compagnies/<string:idCompagnie>")
+@ns.route("/compagnies/<int:idCompagnie>")
 @ns.response(404, "Compagnie not found")
 class CompagnieItem(Resource):
     @ns.marshal_with(compagnie_model)
@@ -59,10 +59,10 @@ class PaysCollection(Resource):
     @ns.expect(pays_input_model)
     @ns.marshal_with(pays_model)
     def post(self):
-        pays = create_pays(codePays=ns.payload["codePays"],nomPays=ns.payload["nomPays"])
+        pays = create_pays(nomPays=ns.payload["nomPays"])
         return pays, 201
 
-@ns.route("/pays/<string:codePays>")
+@ns.route("/pays/<int:codePays>")
 @ns.response(404, "Pays not found")
 class PaysItem(Resource):
     @ns.marshal_with(pays_model)
@@ -203,7 +203,7 @@ class VolCollection(Resource):
         )
         return vol, 201
 
-@ns.route("/vols/<string:idCompagnie>/<string:numVol>/<string:dateHeureDep>")
+@ns.route("/vols/<int:idCompagnie>/<string:numVol>/<string:dateHeureDep>")
 @ns.response(404, "Vol not found")
 class VolItem(Resource):
     @ns.marshal_with(vol_model)
