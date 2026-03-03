@@ -1,0 +1,30 @@
+vol(paris, 1, new_york, 2).
+vol(new_york, 3, rome, 4).
+vol(rome, 5, athenes, 6).
+
+plusPetit(1, 2).
+plusPetit(2, 3).
+plusPetit(3, 4).
+plusPetit(4, 5).
+plusPetit(5, 6).
+
+accessible(VilleDep, HeureDep, VilleArr, HeureArr) :- 
+    vol(VilleDep, HeureDep, VilleArr, HeureArr).
+
+accessible(VilleDep, HeureDep, VilleFinale, HeureArrFinale) :- 
+    accessible(VilleDep, HeureDep, VilleEtape, HeureArrEtape),
+    vol(VilleEtape, HeureDepSuivant, VilleFinale, HeureArrFinale),
+    plusPetit(HeureArrEtape, HeureDepSuivant).
+
+trajetPair(VilleDep, HeureDep, VilleArr, HeureArr) :- 
+    vol(VilleDep, HeureDep, VilleArr, HeureArr).
+
+trajetImpair(VilleDep, HeureDep, VilleFinale, HeureArrFinale) :- 
+    trajetPair(VilleDep, HeureDep, VilleEtape, HeureArrEtape),
+    vol(VilleEtape, HeureDepSuivant, VilleFinale, HeureArrFinale),
+    plusPetit(HeureArrEtape, HeureDepSuivant).
+
+trajetPair(VilleDep, HeureDep, VilleFinale, HeureArrFinale) :- 
+    trajetImpair(VilleDep, HeureDep, VilleEtape, HeureArrEtape),
+    vol(VilleEtape, HeureDepSuivant, VilleFinale, HeureArrFinale),
+    plusPetit(HeureArrEtape, HeureDepSuivant).
