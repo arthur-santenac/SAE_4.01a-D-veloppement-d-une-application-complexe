@@ -1,0 +1,13 @@
+(:Compagnie) : id, nom
+(:Pays) : code, nom
+(:Ville) : id, nom
+(:Aeroport) : id, nom
+(:Terminal) : idAeroport, numTerminal
+(:Vol) : numVol, dateHeureDep, dateHeureArr
+
+(:Ville)-[:SITUE_DANS]->(:Pays)
+(:Aeroport)-[:DESSERT]->(:Ville)
+(:Terminal)-[:APPARTIENT_A]->(:Aeroport)
+(:Vol)-[:OPERE_PAR]->(:Compagnie)
+(:Vol)-[:PART_DE]->(:Terminal)
+(:Vol)-[:ARRIVE_A]->(:Terminal)
