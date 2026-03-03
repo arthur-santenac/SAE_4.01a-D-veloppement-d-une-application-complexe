@@ -59,4 +59,44 @@ VALUES ('DL', '9101',
         TO_DATE('11/07/2023 05:30:00', 'DD/MM/YYYY HH24:MI:SS'),
         3, 'A');
 
+INSERT INTO VOL (idCompagnie, numVol, dateHeureDep, idAeroportDep, numTerminalDep, 
+                 dateHeureArr, idAeroportArr, numTerminalArr)
+VALUES ('DL', '9999', 
+        TO_DATE('11/07/2023 10:00:00', 'DD/MM/YYYY HH24:MI:SS'), 
+        3, 'A',
+        TO_DATE('11/07/2023 23:00:00', 'DD/MM/YYYY HH24:MI:SS'),
+        5, 'C');
+
+INSERT INTO VOL (idCompagnie, numVol, dateHeureDep, idAeroportDep, numTerminalDep, 
+                 dateHeureArr, idAeroportArr, numTerminalArr)
+VALUES ('LH', '1111', 
+        TO_DATE('11/07/2023 09:00:00', 'DD/MM/YYYY HH24:MI:SS'), 
+        4, 'B',
+        TO_DATE('11/07/2023 11:00:00', 'DD/MM/YYYY HH24:MI:SS'),
+        5, 'C');
+
+INSERT INTO VOL (idCompagnie, numVol, dateHeureDep, idAeroportDep, numTerminalDep, 
+                 dateHeureArr, idAeroportArr, numTerminalArr)
+VALUES ('AF', '8888', 
+        TO_DATE('11/07/2023 15:00:00', 'DD/MM/YYYY HH24:MI:SS'), 
+        5, 'C',
+        TO_DATE('11/07/2023 22:00:00', 'DD/MM/YYYY HH24:MI:SS'),
+        2, '1');
+
+INSERT INTO VOL (idCompagnie, numVol, dateHeureDep, idAeroportDep, numTerminalDep, 
+                 dateHeureArr, idAeroportArr, numTerminalArr)
+VALUES ('DL', '1001', 
+        TO_DATE('11/07/2023 10:00:00', 'DD/MM/YYYY HH24:MI:SS'), 
+        3, 'A',
+        TO_DATE('11/07/2023 23:00:00', 'DD/MM/YYYY HH24:MI:SS'),
+        5, 'C');
+
+INSERT INTO VOL (idCompagnie, numVol, dateHeureDep, idAeroportDep, numTerminalDep, 
+                 dateHeureArr, idAeroportArr, numTerminalArr)
+VALUES ('AF', '2002', 
+        TO_DATE('12/07/2023 09:00:00', 'DD/MM/YYYY HH24:MI:SS'), 
+        5, 'C',
+        TO_DATE('12/07/2023 18:00:00', 'DD/MM/YYYY HH24:MI:SS'),
+        2, '1');
+
 COMMIT;
