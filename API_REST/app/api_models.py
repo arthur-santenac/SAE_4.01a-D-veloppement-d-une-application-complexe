@@ -56,6 +56,7 @@ terminal_input_model = api.model("TerminalInput", {
 })
 
 vol_model = api.model("Vol", {
+    "idVol": fields.Integer(required=True, description="Identifiant technique du vol"),
     "idCompagnie": fields.Integer(required=True, description="Identifiant de la compagnie"),
     "numVol": fields.String(required=True, description="Numéro du vol"),
     "dateHeureDep": fields.DateTime(required=True, description="Date et heure de départ"),
@@ -64,6 +65,7 @@ vol_model = api.model("Vol", {
     "numTerminalDep": fields.String(required=True, description="Numéro du terminal de départ"),
     "idAeroportArr": fields.Integer(required=True, description="Identifiant de l'aéroport d'arrivée"),
     "numTerminalArr": fields.String(required=True, description="Numéro du terminal d'arrivée"),
+    "uri": fields.Url("api_vol_item", absolute=True),
 })
 
 vol_input_model = api.model("VolInput", {

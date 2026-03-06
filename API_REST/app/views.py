@@ -3,7 +3,7 @@ from .models import (get_all_compagnies, get_compagnie, create_compagnie, modify
                      get_all_pays, get_pays, create_pays, modify_pays, delete_pays,
                      get_all_villes, get_ville, create_ville, modify_ville, delete_ville,
                      get_all_aeroports, get_aeroport, create_aeroport, modify_aeroport, delete_aeroport,
-                     get_all_terminals, get_terminal, create_terminal, delete_terminal,
+                     get_all_terminals, get_terminal, create_terminal, modify_terminal, delete_terminal,
                      get_all_vols, get_vol, create_vol, modify_vol, delete_vol)
 from .api_models import (compagnie_model, compagnie_input_model,
                          pays_model, pays_input_model,
@@ -169,10 +169,27 @@ class TerminalCollection(Resource):
 
 @ns.route("/terminaux/<int:idAeroport>/<string:numTerminal>")
 @ns.response(404, "Terminal not found")
+@ns.response(409, "Terminal update conflict")
 class TerminalItem(Resource):
     @ns.marshal_with(terminal_model)
     def get(self, idAeroport, numTerminal):
         terminal = get_terminal(idAeroport, numTerminal)
+        if terminal is None:
+            abort(404, "Terminal not found")
+        return terminal
+
+    @ns.expect(terminal_input_model)
+    @ns.marshal_with(terminal_model)
+    def put(self, idAeroport, numTerminal):
+        try:
+            terminal = modify_terminal(
+                idAeroport,
+                numTerminal,
+                ns.payload["idAeroport"],
+                ns.payload["numTerminal"]
+            )
+        except ValueError:
+            abort(409, "Terminal update conflict")
         if terminal is None:
             abort(404, "Terminal not found")
         return terminal
@@ -191,46 +208,53 @@ class VolCollection(Resource):
     @ns.expect(vol_input_model)
     @ns.marshal_with(vol_model)
     def post(self):
-        vol = create_vol(
-            idCompagnie=ns.payload["idCompagnie"],
-            numVol=ns.payload["numVol"],
-            dateHeureDep=datetime.fromisoformat(ns.payload["dateHeureDep"]) if isinstance(ns.payload["dateHeureDep"], str) else ns.payload["dateHeureDep"],
-            dateHeureArr=datetime.fromisoformat(ns.payload["dateHeureArr"]) if isinstance(ns.payload["dateHeureArr"], str) else ns.payload["dateHeureArr"],
-            idAeroportDep=ns.payload["idAeroportDep"],
-            numTerminalDep=ns.payload["numTerminalDep"],
-            idAeroportArr=ns.payload["idAeroportArr"],
-            numTerminalArr=ns.payload["numTerminalArr"]
-        )
+        try:
+            vol = create_vol(
+                idCompagnie=ns.payload["idCompagnie"],
+                numVol=ns.payload["numVol"],
+                dateHeureDep=datetime.fromisoformat(ns.payload["dateHeureDep"]) if isinstance(ns.payload["dateHeureDep"], str) else ns.payload["dateHeureDep"],
+                dateHeureArr=datetime.fromisoformat(ns.payload["dateHeureArr"]) if isinstance(ns.payload["dateHeureArr"], str) else ns.payload["dateHeureArr"],
+                idAeroportDep=ns.payload["idAeroportDep"],
+                numTerminalDep=ns.payload["numTerminalDep"],
+                idAeroportArr=ns.payload["idAeroportArr"],
+                numTerminalArr=ns.payload["numTerminalArr"]
+            )
+        except ValueError:
+            abort(409, "Vol already exists for this compagnie, numero and dateHeureDep")
         return vol, 201
 
-@ns.route("/vols/<int:idCompagnie>/<string:numVol>/<string:dateHeureDep>")
+@ns.route("/vols/<int:idVol>")
 @ns.response(404, "Vol not found")
+@ns.response(409, "Vol update conflict")
 class VolItem(Resource):
     @ns.marshal_with(vol_model)
-    def get(self, idCompagnie, numVol, dateHeureDep):
-        date = datetime.fromisoformat(dateHeureDep)
-        vol = get_vol(idCompagnie, numVol, date)
+    def get(self, idVol):
+        vol = get_vol(idVol)
         if vol is None:
             abort(404, "Vol not found")
         return vol
     
     @ns.expect(vol_input_model)
     @ns.marshal_with(vol_model)
-    def put(self, idCompagnie, numVol, dateHeureDep):
-        date = datetime.fromisoformat(dateHeureDep)
-        vol = modify_vol(
-            idCompagnie, numVol, date,
-            datetime.fromisoformat(ns.payload["dateHeureArr"]) if isinstance(ns.payload["dateHeureArr"], str) else ns.payload["dateHeureArr"],
-            ns.payload["idAeroportDep"],
-            ns.payload["numTerminalDep"],
-            ns.payload["idAeroportArr"],
-            ns.payload["numTerminalArr"]
-        )
+    def put(self, idVol):
+        try:
+            vol = modify_vol(
+                idVol,
+                ns.payload["idCompagnie"],
+                ns.payload["numVol"],
+                datetime.fromisoformat(ns.payload["dateHeureDep"]) if isinstance(ns.payload["dateHeureDep"], str) else ns.payload["dateHeureDep"],
+                datetime.fromisoformat(ns.payload["dateHeureArr"]) if isinstance(ns.payload["dateHeureArr"], str) else ns.payload["dateHeureArr"],
+                ns.payload["idAeroportDep"],
+                ns.payload["numTerminalDep"],
+                ns.payload["idAeroportArr"],
+                ns.payload["numTerminalArr"]
+            )
+        except ValueError:
+            abort(409, "Vol update conflict")
         if vol is None:
             abort(404, "Vol not found")
         return vol
     
-    def delete(self, idCompagnie, numVol, dateHeureDep):
-        date = datetime.fromisoformat(dateHeureDep)
-        delete_vol(idCompagnie, numVol, date)
+    def delete(self, idVol):
+        delete_vol(idVol)
         return {}, 204

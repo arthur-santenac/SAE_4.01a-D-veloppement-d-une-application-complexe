@@ -6,10 +6,6 @@ import { recupererTerminaux } from './views/terminal.js';
 import { recupererVilles } from './views/ville.js';
 import { recupererVols } from './views/vol.js';
 
-
-let ongletActuelle = null;
-let objeetActuelleId = null;
-
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('aeroport').onclick = recupererAeroports;
     document.getElementById('compagnie').onclick = recupererCompagnies;

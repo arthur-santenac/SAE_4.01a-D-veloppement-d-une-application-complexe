@@ -1,17 +1,17 @@
 import { API_URL } from "../config.js";
 
 const API_URL_pays = API_URL + "pays";
-
 let paysActuelId = null;
 
 export async function recupererPays() {
-    try {
+    try{
         const reponse = await fetch(API_URL_pays);
         const donnees = await reponse.json();
         
         afficherListePays(donnees);
         afficherPageVide();
-    } catch(error) {
+    }
+    catch(error) {
         console.error('Erreur:', error);
     }
 }
@@ -23,9 +23,7 @@ function afficherListePays(paysList) {
         <button id="btn-creer-pays">+ Créer un pays</button>
         <div id="liste-pays"></div>
     `;
-
     document.getElementById('btn-creer-pays').addEventListener('click', creerNouveauPays);
-    
     const listeDiv = document.getElementById('liste-pays');
     paysList.forEach(pays => {
         const paysId = pays.uri.split('/').pop();
@@ -43,27 +41,21 @@ function afficherPageVide() {
 }
 
 async function afficherDetailsPays(paysId) {
-    try {
+    try{
         const reponse = await fetch(`${API_URL_pays}/${paysId}`);
         const pays = await reponse.json();
-        
         paysActuelId = paysId;
-        
         afficherFormulairePays(pays);
-    } catch(error) {
+    }
+    catch(error) {
         console.error('Erreur:', error);
     }
 }
 
 function afficherFormulairePays(pays) {
     const divDroite = document.getElementById('details-droite');
-    
     divDroite.innerHTML = `
         <h2>${pays ? 'Modifier le pays' : 'Créer un pays'}</h2>
-        <div class="form-group">
-            <label>Code Pays</label>
-            <input type="text" id="codePays" value="${pays ? pays.codePays : ''}" disabled />
-        </div>
         <div class="form-group">
             <label>Nom du pays</label>
             <input type="text" id="nomPays" value="${pays ? pays.nomPays : ''}" />
@@ -71,15 +63,12 @@ function afficherFormulairePays(pays) {
         <div class="button-group">
             <button class="btn-save" id="btn-sauvegarder">${pays ? 'Modifier' : 'Créer'}</button>
             ${pays ? '<button class="btn-delete" id="btn-supprimer">Supprimer</button>' : ''}
-            <button class="btn-cancel" id="btn-annuler">Annuler</button>
         </div>
     `;
-    
     document.getElementById('btn-sauvegarder').addEventListener('click', sauvegarderPays);
     if (pays) {
         document.getElementById('btn-supprimer').addEventListener('click', supprimerPays);
     }
-    document.getElementById('btn-annuler').addEventListener('click', annulerPays);
 }
 
 async function creerNouveauPays() {
@@ -89,51 +78,58 @@ async function creerNouveauPays() {
 
 async function sauvegarderPays() {
     const nomPays = document.getElementById('nomPays').value;
-    
     if (!nomPays) {
         alert('Veuillez remplir tous les champs');
         return;
     }
-    
-    try {
+    try{
         if (paysActuelId) {
-            await fetch(`${API_URL_pays}/${paysActuelId}`, {
+            const reponse = await fetch(`${API_URL_pays}/${paysActuelId}`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     nomPays: nomPays
                 })
             });
-        } else {
-            await fetch(API_URL_pays, {
+            if (!reponse.ok) {
+                alert('Modification impossible : ce nom de pays est déjà pris.');
+                return;
+            }
+        }
+        else{
+            const reponse = await fetch(API_URL_pays, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     nomPays: nomPays
                 })
             });
+            if (!reponse.ok) {
+                alert('Création impossible : ce nom de pays est déjà pris.');
+                return;
+            }
         }
         recupererPays();
-    } catch(error) {
+    }
+    catch(error) {
         console.error('Erreur:', error);
     }
 }
 
 async function supprimerPays() {
     if (!paysActuelId) return;
-    
-    try {
-        await fetch(`${API_URL_pays}/${paysActuelId}`, {
+    try{
+        const reponse = await fetch(`${API_URL_pays}/${paysActuelId}`, {
             method: 'DELETE'
         });
+        if (!reponse.ok) {
+            alert('Suppression impossible: ce pays est lie a des enregistrements (cle etrangere).');
+            return;
+        }
         paysActuelId = null;
         recupererPays();
-    } catch(error) {
+    }
+    catch(error) {
         console.error('Erreur:', error);
     }
-}
-
-function annulerPays() {
-    paysActuelId = null;
-    afficherPageVide();
 }
