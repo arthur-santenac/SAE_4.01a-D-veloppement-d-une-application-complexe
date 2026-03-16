@@ -11,8 +11,7 @@ let aeroports = [];
 let terminaux = [];
 
 export async function recupererVols() {
-    try {
-        // Récupérer les compagnies, aéroports et terminaux pour le formulaire
+    try{
         const reponseCompagnies = await fetch(API_URL_compagnie);
         const donneesCompagnies = await reponseCompagnies.json();
         compagnies = donneesCompagnies;
@@ -93,7 +92,6 @@ function afficherFormulaireVol(vol) {
         const aeroportId = aeroport.uri.split('/').pop();
         return `<option value="${aeroportId}">${aeroport.nomAeroport}</option>`;
     }).join('');
-    // Formater les dates pour l'input datetime-local
     const formatDateTimeLocal = (dateStr) => {
         if (!dateStr) return '';
         const date = new Date(dateStr);
@@ -157,8 +155,6 @@ function afficherFormulaireVol(vol) {
             <button class="btn-cancel" id="btn-annuler">Annuler</button>
         </div>
     `;
-    
-    // Fonction pour mettre à jour les terminaux selon l'aéroport
     const mettreAJourTerminaux = (idAeroport, selectTerminal, terminalSelectionne = null) => {
         const terminauxFiltres = terminaux.filter(t => t.idAeroport == idAeroport);
         selectTerminal.innerHTML = '<option value="">-- Sélectionner un terminal --</option>';
@@ -172,27 +168,19 @@ function afficherFormulaireVol(vol) {
             selectTerminal.appendChild(option);
         });
     };
-    
-    // Ajouter les event listeners pour les changements d'aéroport
     const selectAeroportDep = document.getElementById('idAeroportDep');
     const selectTerminalDep = document.getElementById('numTerminalDep');
     const selectAeroportArr = document.getElementById('idAeroportArr');
     const selectTerminalArr = document.getElementById('numTerminalArr');
-    
     selectAeroportDep.addEventListener('change', (e) => {
         mettreAJourTerminaux(e.target.value, selectTerminalDep);
     });
-    
     selectAeroportArr.addEventListener('change', (e) => {
         mettreAJourTerminaux(e.target.value, selectTerminalArr);
     });
-    
-    // Pré-remplir les sélections pour la modification
     if (vol) {
         selectAeroportDep.value = vol.idAeroportDep;
         selectAeroportArr.value = vol.idAeroportArr;
-        
-        // Charger les terminaux après avoir sélectionné les aéroports
         setTimeout(() => {
             mettreAJourTerminaux(vol.idAeroportDep, selectTerminalDep, vol.numTerminalDep);
             mettreAJourTerminaux(vol.idAeroportArr, selectTerminalArr, vol.numTerminalArr);
@@ -220,17 +208,14 @@ async function sauvegarderVol() {
     const numTerminalDep = document.getElementById('numTerminalDep').value;
     const idAeroportArr = document.getElementById('idAeroportArr').value;
     const numTerminalArr = document.getElementById('numTerminalArr').value;
-    
     if (!idCompagnie || !numVol || !dateHeureDep || !dateHeureArr || !idAeroportDep || !numTerminalDep || !idAeroportArr || !numTerminalArr) {
         alert('Veuillez remplir tous les champs');
         return;
     }
-    
     try {
         const body = {
             idCompagnie: parseInt(idCompagnie),
             numVol: numVol,
-            // Keep the datetime-local value to avoid timezone shifts when editing.
             dateHeureDep: dateHeureDep,
             dateHeureArr: dateHeureArr,
             idAeroportDep: parseInt(idAeroportDep),
@@ -238,26 +223,24 @@ async function sauvegarderVol() {
             idAeroportArr: parseInt(idAeroportArr),
             numTerminalArr: numTerminalArr
         };
-        
-        if (volActuel) {
-            // Modifier un vol existant
+        if (volActuel){
             const reponse = await fetch(`${API_URL_vol}/${volActuel.idVol}`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(body)
             });
-            if (!reponse.ok) {
+            if (!reponse.ok){
                 alert('Modification impossible pour ce vol');
                 return;
             }
-        } else {
-            // Créer un nouveau vol
+        }
+        else{
             const reponse = await fetch(API_URL_vol, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(body)
             });
-            if (!reponse.ok) {
+            if (!reponse.ok){
                 alert('Creation impossible : ce vol existe deja.');
                 return;
             }
@@ -270,17 +253,14 @@ async function sauvegarderVol() {
 
 async function supprimerVol() {
     if (!volActuel) return;
-    
     try {
         const reponse = await fetch(`${API_URL_vol}/${volActuel.idVol}`, {
             method: 'DELETE'
         });
-
         if (!reponse.ok) {
             alert('Suppression impossible pour ce vol.');
             return;
         }
-
         volActuel = null;
         recupererVols();
     } catch(error) {
