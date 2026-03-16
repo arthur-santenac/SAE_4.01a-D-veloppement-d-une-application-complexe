@@ -1,30 +1,38 @@
+% question 1
 vol(paris, 1, new_york, 2).
 vol(new_york, 3, rome, 4).
 vol(rome, 5, athenes, 6).
 
-plusPetit(1, 2).
 plusPetit(2, 3).
-plusPetit(3, 4).
 plusPetit(4, 5).
-plusPetit(5, 6).
 
-accessible(VilleDep, HeureDep, VilleArr, HeureArr) :- 
-    vol(VilleDep, HeureDep, VilleArr, HeureArr).
+% quesiton 2
+% Vol direct
+accessible(Dep, HDep, Arr, HArr) :- 
+    vol(Dep, HDep, Arr, HArr).
 
-accessible(VilleDep, HeureDep, VilleFinale, HeureArrFinale) :- 
-    accessible(VilleDep, HeureDep, VilleEtape, HeureArrEtape),
-    vol(VilleEtape, HeureDepSuivant, VilleFinale, HeureArrFinale),
-    plusPetit(HeureArrEtape, HeureDepSuivant).
+% Vol avec correspondance(s)
+accessible(Dep, HDep, Fin, HFin) :- 
+    accessible(Dep, HDep, Etape, HEtape),
+    vol(Etape, HSuiv, Fin, HFin),
+    plusPetit(HEtape, HSuiv).
 
-trajetPair(VilleDep, HeureDep, VilleArr, HeureArr) :- 
-    vol(VilleDep, HeureDep, VilleArr, HeureArr).
+% question 3
+% Cas de base : 1 connexion
+impair(Dep, HDep, Fin, HFin) :- 
+    vol(Dep, HDep, Etape, HEtape),
+    vol(Etape, HSuiv, Fin, HFin),
+    plusPetit(HEtape, HSuiv).
 
-trajetImpair(VilleDep, HeureDep, VilleFinale, HeureArrFinale) :- 
-    trajetPair(VilleDep, HeureDep, VilleEtape, HeureArrEtape),
-    vol(VilleEtape, HeureDepSuivant, VilleFinale, HeureArrFinale),
-    plusPetit(HeureArrEtape, HeureDepSuivant).
+% Cas récursif : on ajoute 2 vols à un trajet impair pour qu'il reste impair
+impair(Dep, HDep, Fin, HFin) :- 
+    impair(Dep, HDep, E1, HE1),
+    vol(E1, HS1, E2, HE2),
+    plusPetit(HE1, HS1),
+    vol(E2, HS2, Fin, HFin),
+    plusPetit(HE2, HS2).
 
-trajetPair(VilleDep, HeureDep, VilleFinale, HeureArrFinale) :- 
-    trajetImpair(VilleDep, HeureDep, VilleEtape, HeureArrEtape),
-    vol(VilleEtape, HeureDepSuivant, VilleFinale, HeureArrFinale),
-    plusPetit(HeureArrEtape, HeureDepSuivant).
+
+% requetes
+% accessible(Dep, HDep, Arr, HArr)?
+% impair(Dep, HDep, Fin, HFin)?
