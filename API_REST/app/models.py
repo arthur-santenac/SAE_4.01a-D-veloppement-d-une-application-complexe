@@ -1,22 +1,23 @@
 from .extensions import db
+from sqlalchemy.exc import IntegrityError
 
 class Compagnie(db.Model):
     __tablename__ = "compagnie"
-    idCompagnie = db.Column(db.String(10), primary_key=True)
-    nomCompagnie = db.Column(db.String(50), nullable=False)
+    idCompagnie = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nomCompagnie = db.Column(db.String(50), nullable=False, unique=True)
     vols = db.relationship("Vol", back_populates="compagnie")
 
 class Pays(db.Model):
     __tablename__ = "pays"
-    codePays = db.Column(db.String(2), primary_key=True)
-    nomPays = db.Column(db.String(50), nullable=False)
+    codePays = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nomPays = db.Column(db.String(50), nullable=False, unique=True)
     villes = db.relationship("Ville", back_populates="pays")
 
 class Ville(db.Model):
     __tablename__ = "ville"
     idVille = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    nomVille = db.Column(db.String(50), nullable=False)
-    codePays = db.Column(db.String(2), db.ForeignKey("pays.codePays"), nullable=False)
+    nomVille = db.Column(db.String(50), nullable=False, unique=True)
+    codePays = db.Column(db.Integer, db.ForeignKey("pays.codePays"), nullable=False)
     pays = db.relationship("Pays", back_populates="villes")
     aeroports = db.relationship("Aeroport", back_populates="ville")
 
@@ -36,9 +37,10 @@ class Terminal(db.Model):
 
 class Vol(db.Model):
     __tablename__ = "vol"
-    idCompagnie = db.Column(db.String(10), db.ForeignKey("compagnie.idCompagnie"), primary_key=True)
-    numVol = db.Column(db.String(10), primary_key=True)
-    dateHeureDep = db.Column(db.DateTime, primary_key=True)
+    idVol = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    idCompagnie = db.Column(db.Integer, db.ForeignKey("compagnie.idCompagnie"), nullable=False)
+    numVol = db.Column(db.String(10), nullable=False)
+    dateHeureDep = db.Column(db.DateTime, nullable=False)
     dateHeureArr = db.Column(db.DateTime, nullable=False)
     idAeroportDep = db.Column(db.Integer, db.ForeignKey("aeroport.idAeroport"), nullable=False)
     numTerminalDep = db.Column(db.String(10), nullable=False)
@@ -54,6 +56,7 @@ class Vol(db.Model):
             ["idAeroportArr", "numTerminalArr"],
             ["terminal.idAeroport", "terminal.numTerminal"]
         ),
+        db.UniqueConstraint("idCompagnie", "numVol", "dateHeureDep", name="unique_vol"),
     )
     
     compagnie = db.relationship("Compagnie", back_populates="vols")
@@ -68,8 +71,8 @@ def get_all_compagnies():
 def get_compagnie(idCompagnie):
     return Compagnie.query.get(idCompagnie)
 
-def create_compagnie(idCompagnie, nomCompagnie):
-    compagnie = Compagnie(idCompagnie=idCompagnie, nomCompagnie=nomCompagnie)
+def create_compagnie(nomCompagnie):
+    compagnie = Compagnie(nomCompagnie=nomCompagnie)
     db.session.add(compagnie)
     db.session.commit()
     return compagnie
@@ -96,8 +99,8 @@ def get_all_pays():
 def get_pays(codePays):
     return Pays.query.get(codePays)
 
-def create_pays(codePays, nomPays):
-    pays = Pays(codePays=codePays, nomPays=nomPays)
+def create_pays(nomPays):
+    pays = Pays(nomPays=nomPays)
     db.session.add(pays)
     db.session.commit()
     return pays
@@ -197,6 +200,15 @@ def create_terminal(idAeroport, numTerminal):
     db.session.commit()
     return terminal
 
+def modify_terminal(oldIdAeroport, oldNumTerminal, newIdAeroport, newNumTerminal):
+    terminal = Terminal.query.get((oldIdAeroport, oldNumTerminal))
+    if terminal is None:
+        return None
+    terminal.idAeroport = newIdAeroport
+    terminal.numTerminal = newNumTerminal
+    db.session.commit()
+    return terminal
+
 def delete_terminal(idAeroport, numTerminal):
     terminal = Terminal.query.get((idAeroport, numTerminal))
     if terminal:
@@ -208,8 +220,8 @@ def delete_terminal(idAeroport, numTerminal):
 def get_all_vols():
     return Vol.query.all()
 
-def get_vol(idCompagnie, numVol, dateHeureDep):
-    return Vol.query.get((idCompagnie, numVol, dateHeureDep))
+def get_vol(idVol):
+    return Vol.query.get(idVol)
 
 def get_vols_by_compagnie(idCompagnie):
     return Vol.query.filter_by(idCompagnie=idCompagnie).all()
@@ -220,8 +232,7 @@ def get_vols_by_aeroport_dep(idAeroportDep):
 def get_vols_by_aeroport_arr(idAeroportArr):
     return Vol.query.filter_by(idAeroportArr=idAeroportArr).all()
 
-def create_vol(idCompagnie, numVol, dateHeureDep, dateHeureArr,
-               idAeroportDep, numTerminalDep, idAeroportArr, numTerminalArr):
+def create_vol(idCompagnie, numVol, dateHeureDep, dateHeureArr,idAeroportDep, numTerminalDep, idAeroportArr, numTerminalArr):
     vol = Vol(
         idCompagnie=idCompagnie,
         numVol=numVol,
@@ -236,11 +247,13 @@ def create_vol(idCompagnie, numVol, dateHeureDep, dateHeureArr,
     db.session.commit()
     return vol
 
-def modify_vol(idCompagnie, numVol, dateHeureDep, dateHeureArr,
-               idAeroportDep, numTerminalDep, idAeroportArr, numTerminalArr):
-    vol = Vol.query.get((idCompagnie, numVol, dateHeureDep))
+def modify_vol(idVol, idCompagnie, numVol, dateHeureDep, dateHeureArr,idAeroportDep, numTerminalDep, idAeroportArr, numTerminalArr):
+    vol = Vol.query.get(idVol)
     if vol is None:
         return None
+    vol.idCompagnie = idCompagnie
+    vol.numVol = numVol
+    vol.dateHeureDep = dateHeureDep
     vol.dateHeureArr = dateHeureArr
     vol.idAeroportDep = idAeroportDep
     vol.numTerminalDep = numTerminalDep
@@ -249,8 +262,8 @@ def modify_vol(idCompagnie, numVol, dateHeureDep, dateHeureArr,
     db.session.commit()
     return vol
 
-def delete_vol(idCompagnie, numVol, dateHeureDep):
-    vol = Vol.query.get((idCompagnie, numVol, dateHeureDep))
+def delete_vol(idVol):
+    vol = Vol.query.get(idVol)
     if vol:
         db.session.delete(vol)
         db.session.commit()
