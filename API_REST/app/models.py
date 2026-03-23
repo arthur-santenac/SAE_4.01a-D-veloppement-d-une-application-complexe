@@ -39,7 +39,7 @@ class Vol(db.Model):
     __tablename__ = "vol"
     idVol = db.Column(db.Integer, primary_key=True, autoincrement=True)
     idCompagnie = db.Column(db.Integer, db.ForeignKey("compagnie.idCompagnie"), nullable=False)
-    numVol = db.Column(db.String(10), nullable=False)
+    numVol = db.Column(db.String(10), nullable=False, unique=True)
     dateHeureDep = db.Column(db.DateTime, nullable=False)
     dateHeureArr = db.Column(db.DateTime, nullable=False)
     idAeroportDep = db.Column(db.Integer, db.ForeignKey("aeroport.idAeroport"), nullable=False)

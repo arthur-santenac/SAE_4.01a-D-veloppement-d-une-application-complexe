@@ -1,12 +1,16 @@
-import { API_URL } from "../config.js";
+import {
+    createCompagnie,
+    deleteCompagnie,
+    getCompagnie,
+    getCompagnies,
+    updateCompagnie
+} from "../services/compagnieProvider.js";
 
-const API_URL_compagnie = API_URL + "compagnies";
 let compagnieActuelleId = null;
 
 export async function recupererCompagnies() {
     try{
-        const reponse = await fetch(API_URL_compagnie);
-        const donnees = await reponse.json();
+        const donnees = await getCompagnies();
         
         afficherListeCompagnies(donnees);
         afficherPageVide();
@@ -42,8 +46,7 @@ function afficherPageVide() {
 
 async function afficherDetailsCompagnie(compagnieId) {
     try{
-        const reponse = await fetch(`${API_URL_compagnie}/${compagnieId}`);
-        const compagnie = await reponse.json();
+        const compagnie = await getCompagnie(compagnieId);
         
         compagnieActuelleId = compagnieId;
         
@@ -87,34 +90,23 @@ async function sauvegarderCompagnie() {
     }
     try{
         if (compagnieActuelleId) {
-            const reponse = await fetch(`${API_URL_compagnie}/${compagnieActuelleId}`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    nomCompagnie: nomCompagnie
-                })
+            await updateCompagnie(compagnieActuelleId, {
+                nomCompagnie: nomCompagnie
             });
-            if (!reponse.ok) {
-                alert('Modification impossible : ce nom de compagnie est déjà pris.');
-                return;
-            }
         } 
         else{
-            await fetch(API_URL_compagnie, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    nomCompagnie: nomCompagnie
-                })
+            await createCompagnie({
+                nomCompagnie: nomCompagnie
             });
-            if (!reponse.ok) {
-                alert('Création impossible : ce nom de compagnie est déjà pris.');
-                return;
-            }
         }
         recupererCompagnies();
     }
     catch(error) {
+        if (error.status) {
+            const action = compagnieActuelleId ? 'Modification' : 'Création';
+            alert(`${action} impossible : ce nom de compagnie est déjà pris.`);
+            return;
+        }
         console.error('Erreur:', error);
     }
 }
@@ -122,17 +114,15 @@ async function sauvegarderCompagnie() {
 async function supprimerCompagnie() {
     if (!compagnieActuelleId) return;
     try{
-        const reponse = await fetch(`${API_URL_compagnie}/${compagnieActuelleId}`, {
-            method: 'DELETE'
-        });
-        if (!reponse.ok) {
-            alert('Suppression impossible: cette compagnie est liee a des enregistrements (cle etrangere).');
-            return;
-        }
+        await deleteCompagnie(compagnieActuelleId);
         compagnieActuelleId = null;
         recupererCompagnies();
     }
     catch(error) {
+        if (error.status) {
+            alert('Suppression impossible: cette compagnie est liee a des enregistrements (cle etrangere).');
+            return;
+        }
         console.error('Erreur:', error);
     }
 }

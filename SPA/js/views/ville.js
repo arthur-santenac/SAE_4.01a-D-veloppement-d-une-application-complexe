@@ -1,19 +1,19 @@
-import { API_URL } from "../config.js";
-
-const API_URL_ville = API_URL + "villes";
-const API_URL_pays = API_URL + "pays";
+import {
+    createVille,
+    deleteVille,
+    getVille,
+    getVilles,
+    updateVille
+} from "../services/villeProvider.js";
+import { getPaysList } from "../services/paysProvider.js";
 
 let villeActuelleId = null;
 let pays = [];
 
 export async function recupererVilles() {
     try{
-        const reponsePays = await fetch(API_URL_pays);
-        const donneesPays = await reponsePays.json();
-        pays = donneesPays;
-
-        const reponse = await fetch(API_URL_ville);
-        const donnees = await reponse.json();
+        pays = await getPaysList();
+        const donnees = await getVilles();
         
         afficherListeVilles(donnees);
         afficherPageVide();
@@ -49,8 +49,7 @@ function afficherPageVide() {
 
 async function afficherDetailsVille(villeId) {
     try{
-        const reponse = await fetch(`${API_URL_ville}/${villeId}`);
-        const ville = await reponse.json();
+        const ville = await getVille(villeId);
         villeActuelleId = villeId;
         afficherFormulaireVille(ville);
     }
@@ -104,36 +103,25 @@ async function sauvegarderVille() {
     }
     try{
         if (villeActuelleId) {
-            const reponse = await fetch(`${API_URL_ville}/${villeActuelleId}`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    nomVille: nomVille,
-                    codePays: parseInt(codePays)
-                })
+            await updateVille(villeActuelleId, {
+                nomVille: nomVille,
+                codePays: parseInt(codePays)
             });
-            if (!reponse.ok) {
-                alert('Modification impossible : ce nom de ville est déjà pris.');
-                return;
-            }
         }
         else {
-            const reponse = await fetch(API_URL_ville, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    nomVille: nomVille,
-                    codePays: parseInt(codePays)
-                })
+            await createVille({
+                nomVille: nomVille,
+                codePays: parseInt(codePays)
             });
-            if (!reponse.ok) {
-                alert('Création impossible : ce nom de ville est déjà pris.');
-                return;
-            }
         }
         recupererVilles();
     }
     catch(error) {
+        if (error.status) {
+            const action = villeActuelleId ? 'Modification' : 'Création';
+            alert(`${action} impossible : ce nom de ville est déjà pris.`);
+            return;
+        }
         console.error('Erreur:', error);
     }
 }
@@ -141,17 +129,15 @@ async function sauvegarderVille() {
 async function supprimerVille() {
     if (!villeActuelleId) return;
     try{
-        const reponse = await fetch(`${API_URL_ville}/${villeActuelleId}`, {
-            method: 'DELETE'
-        });
-        if (!reponse.ok) {
-            alert('Suppression impossible: cette ville est liee a des enregistrements (cle etrangere).');
-            return;
-        }
+        await deleteVille(villeActuelleId);
         villeActuelleId = null;
         recupererVilles();
     }
     catch(error) {
+        if (error.status) {
+            alert('Suppression impossible: cette ville est liee a des enregistrements (cle etrangere).');
+            return;
+        }
         console.error('Erreur:', error);
     }
 }

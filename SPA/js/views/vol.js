@@ -1,9 +1,13 @@
-import { API_URL } from "../config.js";
-
-const API_URL_vol = API_URL + "vols";
-const API_URL_compagnie = API_URL + "compagnies";
-const API_URL_aeroport = API_URL + "aeroports";
-const API_URL_terminal = API_URL + "terminaux";
+import {
+    createVol,
+    deleteVol,
+    getVol,
+    getVols,
+    updateVol
+} from "../services/volProvider.js";
+import { getCompagnies } from "../services/compagnieProvider.js";
+import { getAeroports } from "../services/aeroportProvider.js";
+import { getTerminaux } from "../services/terminalProvider.js";
 
 let volActuel = null;
 let compagnies = [];
@@ -12,20 +16,10 @@ let terminaux = [];
 
 export async function recupererVols() {
     try{
-        const reponseCompagnies = await fetch(API_URL_compagnie);
-        const donneesCompagnies = await reponseCompagnies.json();
-        compagnies = donneesCompagnies;
-        
-        const reponseAeroports = await fetch(API_URL_aeroport);
-        const donneesAeroports = await reponseAeroports.json();
-        aeroports = donneesAeroports;
-        
-        const reponseTerminaux = await fetch(API_URL_terminal);
-        const donneesTerminaux = await reponseTerminaux.json();
-        terminaux = donneesTerminaux;
-        
-        const reponse = await fetch(API_URL_vol);
-        const donnees = await reponse.json();
+        compagnies = await getCompagnies();
+        aeroports = await getAeroports();
+        terminaux = await getTerminaux();
+        const donnees = await getVols();
         
         afficherListeVols(donnees);
         afficherPageVide();
@@ -49,8 +43,7 @@ function afficherListeVols(vols) {
         const volId = vol.idVol ?? (vol.uri ? parseInt(vol.uri.split('/').pop(), 10) : null);
         const elementVol = document.createElement('div');
         elementVol.className = 'item-liste';
-        const dateDep = new Date(vol.dateHeureDep).toLocaleString();
-        elementVol.textContent = `Vol ${vol.numVol} - ${dateDep}`;
+        elementVol.textContent = `Vol ${vol.numVol}`;
         elementVol.addEventListener('click', () => afficherDetailsVol(volId));
         listeDiv.appendChild(elementVol);
     });
@@ -67,12 +60,7 @@ async function afficherDetailsVol(idVol) {
             alert('Impossible de charger ce vol: identifiant manquant. Rechargez la liste des vols.');
             return;
         }
-        const reponse = await fetch(`${API_URL_vol}/${idVol}`);
-        if (!reponse.ok) {
-            console.error('Erreur HTTP:', reponse.status, reponse.statusText);
-            throw new Error(`Erreur ${reponse.status}`);
-        }
-        const vol = await reponse.json();
+        const vol = await getVol(idVol);
         volActuel = vol;
         afficherFormulaireVol(vol);
     } catch(error) {
@@ -92,16 +80,33 @@ function afficherFormulaireVol(vol) {
         const aeroportId = aeroport.uri.split('/').pop();
         return `<option value="${aeroportId}">${aeroport.nomAeroport}</option>`;
     }).join('');
-    const formatDateTimeLocal = (dateStr) => {
-        if (!dateStr) return '';
+    const extraireDateEtHeure = (dateStr) => {
+        if (!dateStr) return { date: '', heure: '' };
+
+        const normalisee = String(dateStr).replace(' ', 'T');
+        const matchIso = normalisee.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
+        if (matchIso) {
+            return { date: matchIso[1], heure: matchIso[2] };
+        }
+
         const date = new Date(dateStr);
+        if (Number.isNaN(date.getTime())) {
+            return { date: '', heure: '' };
+        }
+
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const hours = String(date.getHours()).padStart(2, '0');
         const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
+        return {
+            date: `${year}-${month}-${day}`,
+            heure: `${hours}:${minutes}`
+        };
     };
+
+    const dep = extraireDateEtHeure(vol?.dateHeureDep);
+    const arr = extraireDateEtHeure(vol?.dateHeureArr);
     divDroite.innerHTML = `
         <h2>${vol ? 'Modifier le vol' : 'Créer un vol'}</h2>
         <div class="form-group">
@@ -115,13 +120,25 @@ function afficherFormulaireVol(vol) {
             <label>Numéro de vol</label>
             <input type="text" id="numVol" value="${vol ? vol.numVol : ''}" />
         </div>
-        <div class="form-group">
-            <label>Date et heure de départ</label>
-            <input type="datetime-local" id="dateHeureDep" value="${formatDateTimeLocal(vol?.dateHeureDep)}" />
+        <div class="form-row form-row-datetime">
+            <div class="form-group">
+                <label>Date de départ</label>
+                <input type="date" id="dateDep" value="${dep.date}" />
+            </div>
+            <div class="form-group">
+                <label>Heure de départ</label>
+                <input type="time" id="heureDep" value="${dep.heure}" step="60" />
+            </div>
         </div>
-        <div class="form-group">
-            <label>Date et heure d'arrivée</label>
-            <input type="datetime-local" id="dateHeureArr" value="${formatDateTimeLocal(vol?.dateHeureArr)}" />
+        <div class="form-row form-row-datetime">
+            <div class="form-group">
+                <label>Date d'arrivée</label>
+                <input type="date" id="dateArr" value="${arr.date}" />
+            </div>
+            <div class="form-group">
+                <label>Heure d'arrivée</label>
+                <input type="time" id="heureArr" value="${arr.heure}" step="60" />
+            </div>
         </div>
         <div class="form-group">
             <label>Aéroport de départ</label>
@@ -200,10 +217,19 @@ async function creerNouveauVol() {
 }
 
 async function sauvegarderVol() {
+    const construireDateTimePourApi = (datePart, heurePart) => {
+        if (!datePart || !heurePart) return '';
+        return `${datePart}T${heurePart}:00`;
+    };
+
     const idCompagnie = document.getElementById('idCompagnie').value;
     const numVol = document.getElementById('numVol').value;
-    const dateHeureDep = document.getElementById('dateHeureDep').value;
-    const dateHeureArr = document.getElementById('dateHeureArr').value;
+    const dateDep = document.getElementById('dateDep').value;
+    const heureDep = document.getElementById('heureDep').value;
+    const dateArr = document.getElementById('dateArr').value;
+    const heureArr = document.getElementById('heureArr').value;
+    const dateHeureDep = construireDateTimePourApi(dateDep, heureDep);
+    const dateHeureArr = construireDateTimePourApi(dateArr, heureArr);
     const idAeroportDep = document.getElementById('idAeroportDep').value;
     const numTerminalDep = document.getElementById('numTerminalDep').value;
     const idAeroportArr = document.getElementById('idAeroportArr').value;
@@ -224,29 +250,20 @@ async function sauvegarderVol() {
             numTerminalArr: numTerminalArr
         };
         if (volActuel){
-            const reponse = await fetch(`${API_URL_vol}/${volActuel.idVol}`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(body)
-            });
-            if (!reponse.ok){
-                alert('Modification impossible pour ce vol');
-                return;
-            }
+            await updateVol(volActuel.idVol, body);
         }
         else{
-            const reponse = await fetch(API_URL_vol, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(body)
-            });
-            if (!reponse.ok){
-                alert('Creation impossible : ce vol existe deja.');
-                return;
-            }
+            await createVol(body);
         }
         recupererVols();
     } catch(error) {
+        if (error.status) {
+            const message = volActuel
+                ? 'Modification impossible pour ce vol'
+                : 'Creation impossible : ce vol existe deja.';
+            alert(message);
+            return;
+        }
         console.error('Erreur:', error);
     }
 }
@@ -254,16 +271,14 @@ async function sauvegarderVol() {
 async function supprimerVol() {
     if (!volActuel) return;
     try {
-        const reponse = await fetch(`${API_URL_vol}/${volActuel.idVol}`, {
-            method: 'DELETE'
-        });
-        if (!reponse.ok) {
-            alert('Suppression impossible pour ce vol.');
-            return;
-        }
+        await deleteVol(volActuel.idVol);
         volActuel = null;
         recupererVols();
     } catch(error) {
+        if (error.status) {
+            alert('Suppression impossible pour ce vol.');
+            return;
+        }
         console.error('Erreur:', error);
     }
 }

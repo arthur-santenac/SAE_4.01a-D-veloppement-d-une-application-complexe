@@ -1,12 +1,16 @@
-import { API_URL } from "../config.js";
+import {
+    createPays,
+    deletePays,
+    getPays,
+    getPaysList,
+    updatePays
+} from "../services/paysProvider.js";
 
-const API_URL_pays = API_URL + "pays";
 let paysActuelId = null;
 
 export async function recupererPays() {
     try{
-        const reponse = await fetch(API_URL_pays);
-        const donnees = await reponse.json();
+        const donnees = await getPaysList();
         
         afficherListePays(donnees);
         afficherPageVide();
@@ -42,8 +46,7 @@ function afficherPageVide() {
 
 async function afficherDetailsPays(paysId) {
     try{
-        const reponse = await fetch(`${API_URL_pays}/${paysId}`);
-        const pays = await reponse.json();
+        const pays = await getPays(paysId);
         paysActuelId = paysId;
         afficherFormulairePays(pays);
     }
@@ -84,34 +87,23 @@ async function sauvegarderPays() {
     }
     try{
         if (paysActuelId) {
-            const reponse = await fetch(`${API_URL_pays}/${paysActuelId}`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    nomPays: nomPays
-                })
+            await updatePays(paysActuelId, {
+                nomPays: nomPays
             });
-            if (!reponse.ok) {
-                alert('Modification impossible : ce nom de pays est déjà pris.');
-                return;
-            }
         }
         else{
-            const reponse = await fetch(API_URL_pays, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    nomPays: nomPays
-                })
+            await createPays({
+                nomPays: nomPays
             });
-            if (!reponse.ok) {
-                alert('Création impossible : ce nom de pays est déjà pris.');
-                return;
-            }
         }
         recupererPays();
     }
     catch(error) {
+        if (error.status) {
+            const action = paysActuelId ? 'Modification' : 'Création';
+            alert(`${action} impossible : ce nom de pays est déjà pris.`);
+            return;
+        }
         console.error('Erreur:', error);
     }
 }
@@ -119,17 +111,15 @@ async function sauvegarderPays() {
 async function supprimerPays() {
     if (!paysActuelId) return;
     try{
-        const reponse = await fetch(`${API_URL_pays}/${paysActuelId}`, {
-            method: 'DELETE'
-        });
-        if (!reponse.ok) {
-            alert('Suppression impossible: ce pays est lie a des enregistrements (cle etrangere).');
-            return;
-        }
+        await deletePays(paysActuelId);
         paysActuelId = null;
         recupererPays();
     }
     catch(error) {
+        if (error.status) {
+            alert('Suppression impossible: ce pays est lie a des enregistrements (cle etrangere).');
+            return;
+        }
         console.error('Erreur:', error);
     }
 }

@@ -1,18 +1,19 @@
-import { API_URL } from "../config.js";
-
-const API_URL_terminal = API_URL + "terminaux";
-const API_URL_aeroport = API_URL + "aeroports";
+import {
+    createTerminal,
+    deleteTerminal,
+    getTerminal,
+    getTerminaux,
+    updateTerminal
+} from "../services/terminalProvider.js";
+import { getAeroports } from "../services/aeroportProvider.js";
 
 let terminalActuel = null;
 let aeroports = [];
 
 export async function recupererTerminaux() {
     try{
-        const reponseAeroports = await fetch(API_URL_aeroport);
-        const donneesAeroports = await reponseAeroports.json();
-        aeroports = donneesAeroports;
-        const reponse = await fetch(API_URL_terminal);
-        const donnees = await reponse.json();
+        aeroports = await getAeroports();
+        const donnees = await getTerminaux();
         afficherListeTerminaux(donnees);
         afficherPageVide();
     }
@@ -33,7 +34,7 @@ function afficherListeTerminaux(terminaux) {
     terminaux.forEach(terminal => {
         const elementTerminal = document.createElement('div');
         elementTerminal.className = 'item-liste';
-        elementTerminal.textContent = `Terminal ${terminal.numTerminal} - Aéroport ${terminal.idAeroport}`;
+        elementTerminal.textContent = `Terminal ${terminal.numTerminal}`;
         elementTerminal.addEventListener('click', () => afficherDetailsTerminal(terminal.idAeroport, terminal.numTerminal));
         listeDiv.appendChild(elementTerminal);
     });
@@ -46,8 +47,7 @@ function afficherPageVide() {
 
 async function afficherDetailsTerminal(idAeroport, numTerminal) {
     try{
-        const reponse = await fetch(`${API_URL_terminal}/${idAeroport}/${numTerminal}`);
-        const terminal = await reponse.json();
+        const terminal = await getTerminal(idAeroport, numTerminal);
         terminalActuel = { idAeroport, numTerminal };
         afficherFormulaireTerminal(terminal);
     }
@@ -102,36 +102,27 @@ async function sauvegarderTerminal() {
     }
     try{
         if (terminalActuel) {
-            const reponse = await fetch(`${API_URL_terminal}/${terminalActuel.idAeroport}/${terminalActuel.numTerminal}`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    idAeroport: parseInt(idAeroport),
-                    numTerminal: numTerminal
-                })
+            await updateTerminal(terminalActuel.idAeroport, terminalActuel.numTerminal, {
+                idAeroport: parseInt(idAeroport),
+                numTerminal: numTerminal
             });
-            if (!reponse.ok) {
-                alert('Modification impossible pour ce terminal');
-                return;
-            }
         }
         else {
-            const reponse = await fetch(API_URL_terminal, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    idAeroport: parseInt(idAeroport),
-                    numTerminal: numTerminal
-                })
+            await createTerminal({
+                idAeroport: parseInt(idAeroport),
+                numTerminal: numTerminal
             });
-            if (!reponse.ok) {
-                alert('Creation impossible : ce terminal existe deja.');
-                return;
-            }
         }
         recupererTerminaux();
     }
     catch(error) {
+        if (error.status) {
+            const message = terminalActuel
+                ? 'Modification impossible pour ce terminal'
+                : 'Creation impossible : ce terminal existe deja.';
+            alert(message);
+            return;
+        }
         console.error('Erreur:', error);
     }
 }
@@ -139,16 +130,14 @@ async function sauvegarderTerminal() {
 async function supprimerTerminal() {
     if (!terminalActuel) return;
     try {
-        const reponse = await fetch(`${API_URL_terminal}/${terminalActuel.idAeroport}/${terminalActuel.numTerminal}`, {
-            method: 'DELETE'
-        });
-        if (!reponse.ok) {
-            alert('Suppression impossible: ce terminal est lie a des enregistrements (cle etrangere).');
-            return;
-        }
+        await deleteTerminal(terminalActuel.idAeroport, terminalActuel.numTerminal);
         terminalActuel = null;
         recupererTerminaux();
     } catch(error) {
+        if (error.status) {
+            alert('Suppression impossible: ce terminal est lie a des enregistrements (cle etrangere).');
+            return;
+        }
         console.error('Erreur:', error);
     }
 }
