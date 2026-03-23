@@ -1,18 +1,19 @@
-import { API_URL } from "../config.js";
-
-const API_URL_aeroport = API_URL + "aeroports";
-const API_URL_ville = API_URL + "villes";
+import {
+    createAeroport,
+    deleteAeroport,
+    getAeroport,
+    getAeroports,
+    updateAeroport
+} from "../services/aeroportProvider.js";
+import { getVilles } from "../services/villeProvider.js";
 
 let aeroportActuelId = null;
 let villes = [];
 
 export async function recupererAeroports() {
     try{
-        const reponseVilles = await fetch(API_URL_ville);
-        const donneesVilles = await reponseVilles.json();
-        villes = donneesVilles;
-        const reponse = await fetch(API_URL_aeroport);
-        const donnees = await reponse.json();
+        villes = await getVilles();
+        const donnees = await getAeroports();
         afficherListeAeroports(donnees);
         afficherPageVide();
     }
@@ -47,8 +48,7 @@ function afficherPageVide() {
 
 async function afficherDetailsAeroport(aeroportId) {
     try{
-        const reponse = await fetch(`${API_URL_aeroport}/${aeroportId}`);
-        const aeroport = await reponse.json();
+        const aeroport = await getAeroport(aeroportId);
         aeroportActuelId = aeroportId;
         afficherFormulaireAeroport(aeroport);
     }
@@ -102,36 +102,25 @@ async function sauvegarderAeroport() {
     }
     try {
         if (aeroportActuelId) {
-            const reponse = await fetch(`${API_URL_aeroport}/${aeroportActuelId}`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    nomAeroport: nomAeroport,
-                    idVille: parseInt(idVille)
-                })
+            await updateAeroport(aeroportActuelId, {
+                nomAeroport: nomAeroport,
+                idVille: parseInt(idVille)
             });
-            if (!reponse.ok) {
-                alert('Modification impossible : ce nom de aéroport est déjà pris.');
-                return;
-            }
         }
         else {
-            const reponse = await fetch(API_URL_aeroport, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    nomAeroport: nomAeroport,
-                    idVille: parseInt(idVille)
-                })
+            await createAeroport({
+                nomAeroport: nomAeroport,
+                idVille: parseInt(idVille)
             });
-            if (!reponse.ok) {
-                alert('Création impossible : ce nom de aéroport est déjà pris.');
-                return;
-            }
         }
         recupererAeroports();
     }
     catch(error) {
+        if (error.status) {
+            const action = aeroportActuelId ? 'Modification' : 'Création';
+            alert(`${action} impossible : ce nom de aéroport est déjà pris.`);
+            return;
+        }
         console.error('Erreur:', error);
     }
 }
@@ -139,17 +128,15 @@ async function sauvegarderAeroport() {
 async function supprimerAeroport() {
     if (!aeroportActuelId) return;
     try{
-        const reponse = await fetch(`${API_URL_aeroport}/${aeroportActuelId}`, {
-            method: 'DELETE'
-        });
-        if (!reponse.ok) {
-            alert('Suppression impossible: cet aeroport est lie a des enregistrements (cle etrangere).');
-            return;
-        }
+        await deleteAeroport(aeroportActuelId);
         aeroportActuelId = null;
         recupererAeroports();
     }
     catch(error) {
+        if (error.status) {
+            alert('Suppression impossible: cet aeroport est lie a des enregistrements (cle etrangere).');
+            return;
+        }
         console.error('Erreur:', error);
     }
 }
