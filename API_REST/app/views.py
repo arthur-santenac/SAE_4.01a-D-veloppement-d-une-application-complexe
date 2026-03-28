@@ -129,7 +129,7 @@ class AeroportCollection(Resource):
     @ns.expect(aeroport_input_model)
     @ns.marshal_with(aeroport_model)
     def post(self):
-        aeroport = create_aeroport(nomAeroport=ns.payload["nomAeroport"],idVille=ns.payload["idVille"])
+        aeroport = create_aeroport(nomAeroport=ns.payload["nomAeroport"],idVille=ns.payload["idVille"], latitude=ns.payload.get("latitude"), longitude=ns.payload.get("longitude"))
         return aeroport, 201
 
 @ns.route("/aeroports/<int:idAeroport>")
@@ -145,7 +145,13 @@ class AeroportItem(Resource):
     @ns.expect(aeroport_input_model)
     @ns.marshal_with(aeroport_model)
     def put(self, idAeroport):
-        aeroport = modify_aeroport(idAeroport, ns.payload["nomAeroport"], ns.payload["idVille"])
+        aeroport = modify_aeroport(
+            idAeroport, 
+            ns.payload["nomAeroport"], 
+            ns.payload["idVille"],
+            ns.payload.get("latitude"),
+            ns.payload.get("longitude")
+        )
         if aeroport is None:
             abort(404, "Aeroport not found")
         return aeroport

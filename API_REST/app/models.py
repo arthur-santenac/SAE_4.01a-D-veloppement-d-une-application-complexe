@@ -26,6 +26,8 @@ class Aeroport(db.Model):
     idAeroport = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nomAeroport = db.Column(db.String(50), nullable=False, unique=True)
     idVille = db.Column(db.Integer, db.ForeignKey("ville.idVille"), nullable=False)
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
     ville = db.relationship("Ville", back_populates="aeroports")
     terminaux = db.relationship("Terminal", back_populates="aeroport")
 
@@ -162,18 +164,20 @@ def get_aeroport(idAeroport):
 def get_aeroports_by_ville(idVille):
     return Aeroport.query.filter_by(idVille=idVille).all()
 
-def create_aeroport(nomAeroport, idVille):
-    aeroport = Aeroport(nomAeroport=nomAeroport, idVille=idVille)
+def create_aeroport(nomAeroport, idVille, latitude=None, longitude=None):
+    aeroport = Aeroport(nomAeroport=nomAeroport, idVille=idVille, latitude=latitude, longitude=longitude)
     db.session.add(aeroport)
     db.session.commit()
     return aeroport
 
-def modify_aeroport(idAeroport, nomAeroport, idVille):
+def modify_aeroport(idAeroport, nomAeroport, idVille, latitude=None, longitude=None):
     aeroport = Aeroport.query.get(idAeroport)
     if aeroport is None:
         return None
     aeroport.nomAeroport = nomAeroport
     aeroport.idVille = idVille
+    aeroport.latitude = latitude
+    aeroport.longitude = longitude
     db.session.commit()
     return aeroport
 
