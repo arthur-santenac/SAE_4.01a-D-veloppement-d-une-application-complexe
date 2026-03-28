@@ -113,7 +113,8 @@ cd sae_dev_mobil
 flutter pub get
 
 # 2. Lancer l'application (sur l'émulateur Android, Linux ou navigateur Chrome)
-flutter run
+# ⚠️ ATTENTION WEB : Fixez le port ! Sinon les SharedPreferences (Favoris/Dark Mode) risquent d'être perdus au redémarrage
+flutter run -d chrome --web-port=8080
 ```
 
 ---
