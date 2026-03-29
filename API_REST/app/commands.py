@@ -36,11 +36,11 @@ def syncdb():
     db.session.commit()
     
     # Insertion des aéroports
-    aero1 = Aeroport(nomAeroport='Charles de Gaulle', idVille=ville1.idVille)
-    aero2 = Aeroport(nomAeroport='Antonio Carlos Jobim', idVille=ville2.idVille)
-    aero3 = Aeroport(nomAeroport='John F. Kennedy', idVille=ville3.idVille)
-    aero4 = Aeroport(nomAeroport='Berlin Brandenburg', idVille=ville4.idVille)
-    aero5 = Aeroport(nomAeroport='Leonardo da Vinci', idVille=ville5.idVille)
+    aero1 = Aeroport(nomAeroport='Charles de Gaulle', idVille=ville1.idVille, latitude=49.0097, longitude=2.5479)
+    aero2 = Aeroport(nomAeroport='Antonio Carlos Jobim', idVille=ville2.idVille, latitude=-22.8089, longitude=-43.2436)
+    aero3 = Aeroport(nomAeroport='John F. Kennedy', idVille=ville3.idVille, latitude=40.6413, longitude=-73.7781)
+    aero4 = Aeroport(nomAeroport='Berlin Brandenburg', idVille=ville4.idVille, latitude=52.3667, longitude=13.5033)
+    aero5 = Aeroport(nomAeroport='Leonardo da Vinci', idVille=ville5.idVille, latitude=41.8003, longitude=12.2389)
     
     db.session.add_all([aero1, aero2, aero3, aero4, aero5])
     db.session.commit()
@@ -56,37 +56,78 @@ def syncdb():
     db.session.commit()
     
     # Insertion des vols
-    vol1 = Vol(
-        idCompagnie=comp1.idCompagnie, numVol='0442',
-        dateHeureDep=datetime(2023, 7, 10, 23, 30, 0),
-        dateHeureArr=datetime(2023, 7, 11, 5, 30, 0),
-        idAeroportDep=aero1.idAeroport, numTerminalDep='2E',
-        idAeroportArr=aero2.idAeroport, numTerminalArr='1'
-    )
+    vols = [
+        Vol(
+            idCompagnie=comp1.idCompagnie, numVol='AF001',
+            dateHeureDep=datetime(2026, 3, 29, 8, 30, 0),
+            dateHeureArr=datetime(2026, 3, 29, 11, 30, 0),
+            idAeroportDep=aero1.idAeroport, numTerminalDep='2E',
+            idAeroportArr=aero5.idAeroport, numTerminalArr='C'
+        ),
+        Vol(
+            idCompagnie=comp2.idCompagnie, numVol='BA123',
+            dateHeureDep=datetime(2026, 3, 30, 10, 0, 0),
+            dateHeureArr=datetime(2026, 3, 30, 14, 0, 0),
+            idAeroportDep=aero3.idAeroport, numTerminalDep='A',
+            idAeroportArr=aero1.idAeroport, numTerminalArr='2E'
+        ),
+        Vol(
+            idCompagnie=comp3.idCompagnie, numVol='LH456',
+            dateHeureDep=datetime(2026, 4, 1, 14, 15, 0),
+            dateHeureArr=datetime(2026, 4, 1, 16, 45, 0),
+            idAeroportDep=aero4.idAeroport, numTerminalDep='B',
+            idAeroportArr=aero5.idAeroport, numTerminalArr='C'
+        ),
+        Vol(
+            idCompagnie=comp4.idCompagnie, numVol='DL789',
+            dateHeureDep=datetime(2026, 4, 3, 16, 45, 0),
+            dateHeureArr=datetime(2026, 4, 4, 6, 30, 0),
+            idAeroportDep=aero1.idAeroport, numTerminalDep='2E',
+            idAeroportArr=aero3.idAeroport, numTerminalArr='A'
+        ),
+        Vol(
+            idCompagnie=comp1.idCompagnie, numVol='AF002',
+            dateHeureDep=datetime(2026, 4, 5, 22, 0, 0),
+            dateHeureArr=datetime(2026, 4, 6, 8, 0, 0),
+            idAeroportDep=aero2.idAeroport, numTerminalDep='1',
+            idAeroportArr=aero1.idAeroport, numTerminalArr='2E'
+        ),
+        Vol(
+            idCompagnie=comp2.idCompagnie, numVol='BA124',
+            dateHeureDep=datetime(2026, 4, 7, 9, 0, 0),
+            dateHeureArr=datetime(2026, 4, 7, 11, 30, 0),
+            idAeroportDep=aero1.idAeroport, numTerminalDep='2E',
+            idAeroportArr=aero4.idAeroport, numTerminalArr='B'
+        ),
+        Vol(
+            idCompagnie=comp3.idCompagnie, numVol='LH457',
+            dateHeureDep=datetime(2026, 4, 9, 13, 10, 0),
+            dateHeureArr=datetime(2026, 4, 9, 23, 50, 0),
+            idAeroportDep=aero4.idAeroport, numTerminalDep='B',
+            idAeroportArr=aero2.idAeroport, numTerminalArr='1'
+        ),
+        Vol(
+            idCompagnie=comp4.idCompagnie, numVol='DL790',
+            dateHeureDep=datetime(2026, 4, 11, 7, 0, 0),
+            dateHeureArr=datetime(2026, 4, 11, 15, 0, 0),
+            idAeroportDep=aero3.idAeroport, numTerminalDep='A',
+            idAeroportArr=aero4.idAeroport, numTerminalArr='B'
+        ),
+        Vol(
+            idCompagnie=comp1.idCompagnie, numVol='AF003',
+            dateHeureDep=datetime(2026, 4, 13, 18, 30, 0),
+            dateHeureArr=datetime(2026, 4, 14, 5, 45, 0),
+            idAeroportDep=aero1.idAeroport, numTerminalDep='2E',
+            idAeroportArr=aero2.idAeroport, numTerminalArr='1'
+        ),
+        Vol(
+            idCompagnie=comp1.idCompagnie, numVol='AF004',
+            dateHeureDep=datetime(2026, 4, 15, 10, 0, 0),
+            dateHeureArr=datetime(2026, 4, 15, 12, 10, 0),
+            idAeroportDep=aero5.idAeroport, numTerminalDep='C',
+            idAeroportArr=aero1.idAeroport, numTerminalArr='2E'
+        )
+    ]
     
-    vol2 = Vol(
-        idCompagnie=comp2.idCompagnie, numVol='1234',
-        dateHeureDep=datetime(2023, 7, 10, 20, 0, 0),
-        dateHeureArr=datetime(2023, 7, 11, 4, 0, 0),
-        idAeroportDep=aero1.idAeroport, numTerminalDep='2E',
-        idAeroportArr=aero3.idAeroport, numTerminalArr='A'
-    )
-    
-    vol3 = Vol(
-        idCompagnie=comp3.idCompagnie, numVol='5678',
-        dateHeureDep=datetime(2023, 7, 10, 22, 0, 0),
-        dateHeureArr=datetime(2023, 7, 11, 6, 0, 0),
-        idAeroportDep=aero1.idAeroport, numTerminalDep='2E',
-        idAeroportArr=aero4.idAeroport, numTerminalArr='B'
-    )
-    
-    vol4 = Vol(
-        idCompagnie=comp4.idCompagnie, numVol='9101',
-        dateHeureDep=datetime(2023, 7, 10, 21, 0, 0),
-        dateHeureArr=datetime(2023, 7, 11, 5, 30, 0),
-        idAeroportDep=aero1.idAeroport, numTerminalDep='2E',
-        idAeroportArr=aero3.idAeroport, numTerminalArr='A'
-    )
-    
-    db.session.add_all([vol1, vol2, vol3, vol4])
+    db.session.add_all(vols)
     db.session.commit()

@@ -31,6 +31,7 @@ function afficherListeAeroports(aeroports) {
     `;
     document.getElementById('btn-creer-aeroport').addEventListener('click', creerNouvelAeroport);
     const listeDiv = document.getElementById('liste-aeroports');
+    
     aeroports.forEach(aeroport => {
         const aeroportId = aeroport.uri.split('/').pop();
         const elementAeroport = document.createElement('div');
@@ -64,6 +65,10 @@ function afficherFormulaireAeroport(aeroport) {
         const selected = aeroport && aeroport.idVille == villeId ? 'selected' : '';
         return `<option value="${villeId}" ${selected}>${ville.nomVille}</option>`;
     }).join('');
+    
+    const latValue = aeroport ? aeroport.latitude : '';
+    const lngValue = aeroport ? aeroport.longitude : '';
+    
     divDroite.innerHTML = `
         <h2>${aeroport ? 'Modifier l\'aéroport' : 'Créer un aéroport'}</h2>
         <div class="form-group">
@@ -76,6 +81,14 @@ function afficherFormulaireAeroport(aeroport) {
                 <option value="">-- Sélectionner une ville --</option>
                 ${optionsVilles}
             </select>
+        </div>
+        <div class="form-group">
+            <label>Latitude</label>
+            <input type="number" step="any" id="latitude" value="${latValue}" placeholder="Ex: 48.8566" />
+        </div>
+        <div class="form-group">
+            <label>Longitude</label>
+            <input type="number" step="any" id="longitude" value="${lngValue}" placeholder="Ex: 2.3522" />
         </div>
         <div class="button-group">
             <button class="btn-save" id="btn-sauvegarder">${aeroport ? 'Modifier' : 'Créer'}</button>
@@ -96,29 +109,34 @@ async function creerNouvelAeroport() {
 async function sauvegarderAeroport() {
     const nomAeroport = document.getElementById('nomAeroport').value;
     const idVille = document.getElementById('idVille').value;
+    const latitude = document.getElementById('latitude').value;
+    const longitude = document.getElementById('longitude').value;
+    
     if (!nomAeroport || !idVille) {
-        alert('Veuillez remplir tous les champs');
+        alert('Veuillez remplir au moins le nom de l\'aéroport et la ville');
         return;
     }
+    
+    const formData = {
+        nomAeroport: nomAeroport,
+        idVille: parseInt(idVille),
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude)
+    };
+    
     try {
         if (aeroportActuelId) {
-            await updateAeroport(aeroportActuelId, {
-                nomAeroport: nomAeroport,
-                idVille: parseInt(idVille)
-            });
+            await updateAeroport(aeroportActuelId, formData);
         }
         else {
-            await createAeroport({
-                nomAeroport: nomAeroport,
-                idVille: parseInt(idVille)
-            });
+            await createAeroport(formData);
         }
         recupererAeroports();
     }
     catch(error) {
         if (error.status) {
             const action = aeroportActuelId ? 'Modification' : 'Création';
-            alert(`${action} impossible : ce nom de aéroport est déjà pris.`);
+            alert(`${action} impossible : vérifiez vos données.`);
             return;
         }
         console.error('Erreur:', error);

@@ -37,12 +37,16 @@ aeroport_model = api.model("Aeroport", {
     "idAeroport": fields.Integer(description="Identifiant de l'aéroport"),
     "nomAeroport": fields.String(required=True, description="Nom de l'aéroport"),
     "idVille": fields.Integer(required=True, description="Identifiant de la ville"),
+    "latitude": fields.Float(description="Latitude de l'aéroport"),
+    "longitude": fields.Float(description="Longitude de l'aéroport"),
     "uri": fields.Url("api_aeroport_item", absolute=True),
 })
 
 aeroport_input_model = api.model("AeroportInput", {
     "nomAeroport": fields.String(required=True),
     "idVille": fields.Integer(required=True),
+    "latitude": fields.Float(required=False),
+    "longitude": fields.Float(required=False),
 })
 
 terminal_model = api.model("Terminal", {

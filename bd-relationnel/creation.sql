@@ -22,6 +22,8 @@ CREATE TABLE AEROPORT (
   idAeroport NUMBER GENERATED ALWAYS AS IDENTITY,
   nomAeroport VARCHAR2(50) NOT NULL,
   idVille NUMBER NOT NULL,
+  latitude NUMBER,
+  longitude NUMBER,
   CONSTRAINT pk_aeroport PRIMARY KEY (idAeroport),
   CONSTRAINT uk_aeroport_nom UNIQUE (nomAeroport),
   CONSTRAINT fk_aeroport_ville FOREIGN KEY (idVille) REFERENCES VILLE(idVille)
