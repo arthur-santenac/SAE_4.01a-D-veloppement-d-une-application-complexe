@@ -1,12 +1,53 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../viewmodels/vols_view_model.dart';
-import '../models/aeroport.dart';
 
 class EcranRechercheVols extends StatelessWidget {
   const EcranRechercheVols({super.key});
+
+  List<LatLng> _buildCurvedPath(
+    LatLng start,
+    LatLng end, {
+    int segments = 40,
+    double curvature = 0.25,
+  }) {
+    final dx = end.longitude - start.longitude;
+    final dy = end.latitude - start.latitude;
+    final distance = math.sqrt((dx * dx) + (dy * dy));
+
+    if (distance == 0) {
+      return [start, end];
+    }
+
+    final midLat = (start.latitude + end.latitude) / 2;
+    final midLng = (start.longitude + end.longitude) / 2;
+
+    // Offset the control point perpendicular to the segment to form an arc.
+    final perpX = -dy / distance;
+    final perpY = dx / distance;
+
+    final control = LatLng(
+      midLat + (perpY * distance * curvature),
+      midLng + (perpX * distance * curvature),
+    );
+
+    return List.generate(segments + 1, (i) {
+      final t = i / segments;
+      final oneMinusT = 1 - t;
+
+      final lat = (oneMinusT * oneMinusT * start.latitude) +
+          (2 * oneMinusT * t * control.latitude) +
+          (t * t * end.latitude);
+      final lng = (oneMinusT * oneMinusT * start.longitude) +
+          (2 * oneMinusT * t * control.longitude) +
+          (t * t * end.longitude);
+
+      return LatLng(lat, lng);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,10 +70,10 @@ class EcranRechercheVols extends StatelessWidget {
               aeroArr.latitude != null && aeroArr.longitude != null) {
              polylines.add(
                Polyline(
-                 points: [
+                 points: _buildCurvedPath(
                    LatLng(aeroDep.latitude!, aeroDep.longitude!),
                    LatLng(aeroArr.latitude!, aeroArr.longitude!),
-                 ],
+                 ),
                  color: Theme.of(context).colorScheme.primary,
                  strokeWidth: 4.0,
                ),

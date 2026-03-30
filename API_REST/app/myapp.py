@@ -11,7 +11,7 @@ import os
 # initialisation de la BD
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
 	'DATABASE_URL',
-	'mysql+pymysql://nathan:nathan@localhost:3306/vol?charset=utf8mb4') # ICI mettre les bonnes infos de connexion à la base de données
+	'mysql+pymysql://joubert:joubert@servinfo-maria:3306/DBjoubert?charset=utf8mb4') # ICI mettre les bonnes infos de connexion à la base de données
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # initialisation de restx

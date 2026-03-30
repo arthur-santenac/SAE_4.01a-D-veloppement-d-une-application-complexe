@@ -83,9 +83,9 @@ class _MyHomePageState extends State<MyHomePage> {
   int _currentIndex = 0;
 
   final List<Widget> mesPages = [
-    const EcranListeVols(),
-    const EcranRechercheVols(),
     const EcranAllVols(),
+    const EcranRechercheVols(),
+    const EcranListeVols(),
     const EcranSettings(),
   ];
 
@@ -99,9 +99,9 @@ class _MyHomePageState extends State<MyHomePage> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Mes Vols'),
-          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Carte'),
           BottomNavigationBarItem(icon: Icon(Icons.airplanemode_on), label: 'Tous les vols'),
+          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Carte'),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Mes Vols'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Paramètres'),
         ],
         currentIndex: _currentIndex,
