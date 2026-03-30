@@ -1,0 +1,38 @@
+% question 1
+vol(paris, 1, new_york, 2).
+vol(new_york, 3, rome, 4).
+vol(rome, 5, athenes, 6).
+
+plusPetit(2, 3).
+plusPetit(4, 5).
+
+% quesiton 2
+% Vol direct
+accessible(Dep, HDep, Arr, HArr) :- 
+    vol(Dep, HDep, Arr, HArr).
+
+% Vol avec correspondance(s)
+accessible(Dep, HDep, Fin, HFin) :- 
+    accessible(Dep, HDep, Etape, HEtape),
+    vol(Etape, HSuiv, Fin, HFin),
+    plusPetit(HEtape, HSuiv).
+
+% question 3
+% Cas de base : 1 connexion
+impair(Dep, HDep, Fin, HFin) :- 
+    vol(Dep, HDep, Etape, HEtape),
+    vol(Etape, HSuiv, Fin, HFin),
+    plusPetit(HEtape, HSuiv).
+
+% Cas récursif : on ajoute 2 vols à un trajet impair pour qu'il reste impair
+impair(Dep, HDep, Fin, HFin) :- 
+    impair(Dep, HDep, E1, HE1),
+    vol(E1, HS1, E2, HE2),
+    plusPetit(HE1, HS1),
+    vol(E2, HS2, Fin, HFin),
+    plusPetit(HE2, HS2).
+
+
+% requetes
+% accessible(Dep, HDep, Arr, HArr)?
+% impair(Dep, HDep, Fin, HFin)?
